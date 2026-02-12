@@ -8,5 +8,37 @@
       <summary>Refresh interval in seconds</summary>
       <description>How often to poll the Claude API for usage data (30–3600 seconds).</description>
     </key>
+
+    <key name="warn-threshold" type="i">
+      <default>50</default>
+      <range min="1" max="99"/>
+      <summary>Warning threshold (%)</summary>
+      <description>Usage percentage at which bars and panel text turn the warning color.</description>
+    </key>
+
+    <key name="crit-threshold" type="i">
+      <default>80</default>
+      <range min="1" max="99"/>
+      <summary>Critical threshold (%)</summary>
+      <description>Usage percentage at which bars and panel text turn the critical color.</description>
+    </key>
+
+    <key name="color-ok" type="s">
+      <default>'#73c48f'</default>
+      <summary>OK color</summary>
+      <description>Hex color for usage bars below the warning threshold.</description>
+    </key>
+
+    <key name="color-warn" type="s">
+      <default>'#f5a623'</default>
+      <summary>Warning color</summary>
+      <description>Hex color for usage bars and panel text at the warning threshold.</description>
+    </key>
+
+    <key name="color-crit" type="s">
+      <default>'#e74c3c'</default>
+      <summary>Critical color</summary>
+      <description>Hex color for usage bars and panel text at the critical threshold.</description>
+    </key>
   </schema>
 </schemalist>

@@ -15,9 +15,10 @@ const API_URL = 'https://api.anthropic.com/api/oauth/usage';
 // ── Usage row: title + percentage on top, bar in middle, reset time below ───
 const UsageRow = GObject.registerClass(
 class UsageRow extends PopupMenu.PopupBaseMenuItem {
-    _init(title, params) {
+    _init(title, settings, params) {
         super._init({reactive: false, can_focus: false, ...params});
 
+        this._settings = settings;
         this._box = new St.BoxLayout({vertical: true, x_expand: true});
         this.add_child(this._box);
 
@@ -72,15 +73,16 @@ class UsageRow extends PopupMenu.PopupBaseMenuItem {
         this._value.text = `${p}%`;
 
         // Bar color
-        this._barFill.remove_style_class_name('claude-bar-ok');
-        this._barFill.remove_style_class_name('claude-bar-warn');
-        this._barFill.remove_style_class_name('claude-bar-crit');
-        if (p >= 80)
-            this._barFill.add_style_class_name('claude-bar-crit');
-        else if (p >= 50)
-            this._barFill.add_style_class_name('claude-bar-warn');
+        const warn = this._settings.get_int('warn-threshold');
+        const crit = this._settings.get_int('crit-threshold');
+        let color;
+        if (p >= crit)
+            color = this._settings.get_string('color-crit');
+        else if (p >= warn)
+            color = this._settings.get_string('color-warn');
         else
-            this._barFill.add_style_class_name('claude-bar-ok');
+            color = this._settings.get_string('color-ok');
+        this._barFill.set_style(`background-color: ${color};`);
 
         // Bar width as % of track
         const trackWidth = this._barTrack.width || 220;
@@ -123,9 +125,15 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
         this._settings = settings;
         this._session = new Soup.Session();
         this._timeoutId = null;
-        this._settingsChangedId = this._settings.connect(
+        this._settingsChangedIds = [];
+        this._settingsChangedIds.push(this._settings.connect(
             'changed::refresh-interval', () => this._restartTimer()
-        );
+        ));
+        for (const key of ['warn-threshold', 'crit-threshold', 'color-ok', 'color-warn', 'color-crit']) {
+            this._settingsChangedIds.push(this._settings.connect(
+                `changed::${key}`, () => this._refresh()
+            ));
+        }
 
         // ── Panel button: Claude icon + "5h% · 7d% · S%" ───────────────
         const panelBox = new St.BoxLayout({
@@ -159,13 +167,13 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
 
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-        this._fiveHourRow = new UsageRow('Session  (5 h)');
+        this._fiveHourRow = new UsageRow('Session  (5 h)', this._settings);
         this.menu.addMenuItem(this._fiveHourRow);
 
-        this._sevenDayRow = new UsageRow('Weekly  (all models)');
+        this._sevenDayRow = new UsageRow('Weekly  (all models)', this._settings);
         this.menu.addMenuItem(this._sevenDayRow);
 
-        this._sonnetRow = new UsageRow('Weekly  (Sonnet)');
+        this._sonnetRow = new UsageRow('Weekly  (Sonnet)', this._settings);
         this.menu.addMenuItem(this._sonnetRow);
 
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
@@ -253,17 +261,19 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
         this._panelLabel.text = `${fhPct}% · ${sdPct}% · ${snPct}%`;
 
         // Colour the panel text when any bucket is high
-        this._panelLabel.remove_style_class_name('claude-panel-warn');
-        this._panelLabel.remove_style_class_name('claude-panel-crit');
         const maxPct = Math.max(
             fh?.utilization ?? 0,
             sd?.utilization ?? 0,
             sn?.utilization ?? 0
         );
-        if (maxPct >= 80)
-            this._panelLabel.add_style_class_name('claude-panel-crit');
-        else if (maxPct >= 50)
-            this._panelLabel.add_style_class_name('claude-panel-warn');
+        const warn = this._settings.get_int('warn-threshold');
+        const crit = this._settings.get_int('crit-threshold');
+        if (maxPct >= crit)
+            this._panelLabel.set_style(`color: ${this._settings.get_string('color-crit')};`);
+        else if (maxPct >= warn)
+            this._panelLabel.set_style(`color: ${this._settings.get_string('color-warn')};`);
+        else
+            this._panelLabel.set_style('');
 
         const now = GLib.DateTime.new_now_local();
         this._statusItem.label.text = `Updated ${now.format('%l:%M %p')}`;
@@ -300,9 +310,10 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
 
     destroy() {
         this._stopTimer();
-        if (this._settingsChangedId) {
-            this._settings.disconnect(this._settingsChangedId);
-            this._settingsChangedId = null;
+        if (this._settingsChangedIds) {
+            for (const id of this._settingsChangedIds)
+                this._settings.disconnect(id);
+            this._settingsChangedIds = null;
         }
         this._settings = null;
         this._session = null;

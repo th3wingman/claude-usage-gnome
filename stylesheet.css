@@ -4,14 +4,6 @@
     margin-left: 4px;
 }
 
-.claude-panel-warn {
-    color: #f5a623;
-}
-
-.claude-panel-crit {
-    color: #e74c3c;
-}
-
 /* ── Menu header ──────────────────────────────────────────────────────── */
 .claude-header-label {
     font-weight: 700;
@@ -41,18 +33,6 @@
     height: 8px;
     border-radius: 4px;
     min-width: 0px;
-}
-
-.claude-bar-ok {
-    background-color: #73c48f;
-}
-
-.claude-bar-warn {
-    background-color: #f5a623;
-}
-
-.claude-bar-crit {
-    background-color: #e74c3c;
 }
 
 .claude-row-reset {

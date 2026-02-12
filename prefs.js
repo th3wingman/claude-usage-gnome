@@ -31,5 +31,62 @@ export default class ClaudeUsagePreferences extends ExtensionPreferences {
             'value',
             Gio.SettingsBindFlags.DEFAULT
         );
+
+        // ── Appearance ──────────────────────────────────────────────────
+        const appearanceGroup = new Adw.PreferencesGroup({
+            title: 'Appearance',
+            description: 'Color thresholds and colors for usage bars and panel text',
+        });
+        page.add(appearanceGroup);
+
+        // Warn threshold
+        const warnRow = Adw.SpinRow.new_with_range(1, 99, 1);
+        warnRow.set_title('Warning threshold');
+        warnRow.set_subtitle('Usage % at which bars turn warning color');
+        appearanceGroup.add(warnRow);
+        settings.bind('warn-threshold', warnRow, 'value', Gio.SettingsBindFlags.DEFAULT);
+
+        // Crit threshold
+        const critRow = Adw.SpinRow.new_with_range(1, 99, 1);
+        critRow.set_title('Critical threshold');
+        critRow.set_subtitle('Usage % at which bars turn critical color');
+        appearanceGroup.add(critRow);
+        settings.bind('crit-threshold', critRow, 'value', Gio.SettingsBindFlags.DEFAULT);
+
+        // Color OK
+        const colorOkRow = new Adw.EntryRow({title: 'OK color (hex)'});
+        colorOkRow.set_text(settings.get_string('color-ok'));
+        colorOkRow.connect('changed', () => {
+            settings.set_string('color-ok', colorOkRow.get_text());
+        });
+        settings.connect('changed::color-ok', () => {
+            if (colorOkRow.get_text() !== settings.get_string('color-ok'))
+                colorOkRow.set_text(settings.get_string('color-ok'));
+        });
+        appearanceGroup.add(colorOkRow);
+
+        // Color Warn
+        const colorWarnRow = new Adw.EntryRow({title: 'Warning color (hex)'});
+        colorWarnRow.set_text(settings.get_string('color-warn'));
+        colorWarnRow.connect('changed', () => {
+            settings.set_string('color-warn', colorWarnRow.get_text());
+        });
+        settings.connect('changed::color-warn', () => {
+            if (colorWarnRow.get_text() !== settings.get_string('color-warn'))
+                colorWarnRow.set_text(settings.get_string('color-warn'));
+        });
+        appearanceGroup.add(colorWarnRow);
+
+        // Color Crit
+        const colorCritRow = new Adw.EntryRow({title: 'Critical color (hex)'});
+        colorCritRow.set_text(settings.get_string('color-crit'));
+        colorCritRow.connect('changed', () => {
+            settings.set_string('color-crit', colorCritRow.get_text());
+        });
+        settings.connect('changed::color-crit', () => {
+            if (colorCritRow.get_text() !== settings.get_string('color-crit'))
+                colorCritRow.set_text(settings.get_string('color-crit'));
+        });
+        appearanceGroup.add(colorCritRow);
     }
 }
