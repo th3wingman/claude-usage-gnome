@@ -33,7 +33,7 @@ Then restart GNOME Shell and enable:
 # X11: Alt+F2 → r → Enter
 # Wayland: log out / log in
 
-gnome-extensions enable claude-usage@claude-code
+gnome-extensions enable claude-usage@th3wingman
 ```
 
 ## Uninstall

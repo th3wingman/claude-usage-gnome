@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-UUID="claude-usage@claude-code"
+UUID="claude-usage@th3wingman"
 EXT_DIR="${HOME}/.local/share/gnome-shell/extensions/${UUID}"
 SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
 

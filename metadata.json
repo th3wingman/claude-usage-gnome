@@ -1,8 +1,8 @@
 {
   "name": "Claude Code Usage",
   "description": "Monitor Claude Code token usage limits from the top bar",
-  "uuid": "claude-usage@claude-code",
+  "uuid": "claude-usage@th3wingman",
   "shell-version": ["46"],
   "version": 2,
-  "url": ""
+  "url": "https://github.com/th3wingman/claude-usage-gnome"
 }

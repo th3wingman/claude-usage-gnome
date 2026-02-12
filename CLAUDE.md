@@ -9,11 +9,11 @@ GNOME Shell 46 extension (Ubuntu 24.04) that displays Claude Code token usage li
 ## Install / Uninstall
 
 ```bash
-./install.sh            # copies files to ~/.local/share/gnome-shell/extensions/claude-usage@claude-code/
+./install.sh            # copies files to ~/.local/share/gnome-shell/extensions/claude-usage@th3wingman/
 ./install.sh uninstall  # removes the extension directory
 ```
 
-After install, restart GNOME Shell and run `gnome-extensions enable claude-usage@claude-code`.
+After install, restart GNOME Shell and run `gnome-extensions enable claude-usage@th3wingman`.
 
 No build step — GNOME Shell loads the JS/CSS directly.
 
