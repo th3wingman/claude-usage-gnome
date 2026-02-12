@@ -82,6 +82,10 @@ extension isn't published there, the lookup fails. This doesn't affect
 functionality. See the [GitHub repo](https://github.com/th3wingman/claude-usage-gnome)
 for details instead.
 
+## Acknowledgements
+
+Inspired by [ccusage-indicator](https://github.com/lordvcs/ccusage-indicator) by [@lordvcs](https://github.com/lordvcs).
+
 ## License
 
 MIT
