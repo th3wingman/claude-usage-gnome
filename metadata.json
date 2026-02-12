@@ -1,0 +1,8 @@
+{
+  "name": "Claude Code Usage",
+  "description": "Monitor Claude Code token usage limits from the top bar",
+  "uuid": "claude-usage@claude-code",
+  "shell-version": ["46"],
+  "version": 1,
+  "url": ""
+}

@@ -1,0 +1,81 @@
+/* ── Panel ─────────────────────────────────────────────────────────────── */
+.claude-panel-icon {
+    icon-size: 16px;
+    margin-right: 4px;
+}
+
+.claude-panel-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #ccc;
+}
+
+.claude-panel-warn {
+    color: #f5a623;
+}
+
+.claude-panel-crit {
+    color: #e74c3c;
+}
+
+/* ── Menu header ──────────────────────────────────────────────────────── */
+.claude-header-label {
+    font-weight: 700;
+    font-size: 13px;
+    color: #e8e8e8;
+}
+
+/* ── Usage rows ───────────────────────────────────────────────────────── */
+.claude-row-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #ddd;
+    margin-bottom: 4px;
+}
+
+.claude-row-value {
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.claude-bar-track {
+    height: 6px;
+    border-radius: 3px;
+    background-color: rgba(255, 255, 255, 0.12);
+    margin-top: 2px;
+    margin-bottom: 4px;
+    min-width: 200px;
+}
+
+.claude-bar-fill {
+    height: 6px;
+    border-radius: 3px;
+    min-width: 0px;
+}
+
+.claude-bar-ok {
+    background-color: #73c48f;
+}
+
+.claude-bar-warn {
+    background-color: #f5a623;
+}
+
+.claude-bar-crit {
+    background-color: #e74c3c;
+}
+
+.claude-row-reset {
+    font-size: 10px;
+    color: #999;
+    margin-bottom: 6px;
+}
+
+/* ── Status line ──────────────────────────────────────────────────────── */
+.claude-status-label {
+    font-size: 10px;
+    font-style: italic;
+    color: #888;
+}
