@@ -129,7 +129,8 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
         this._settingsChangedIds.push(this._settings.connect(
             'changed::refresh-interval', () => this._restartTimer()
         ));
-        for (const key of ['warn-threshold', 'crit-threshold', 'color-ok', 'color-warn', 'color-crit']) {
+        for (const key of ['warn-threshold', 'crit-threshold', 'color-ok', 'color-warn', 'color-crit',
+                            'show-session', 'show-weekly', 'show-sonnet']) {
             this._settingsChangedIds.push(this._settings.connect(
                 `changed::${key}`, () => this._refresh()
             ));
@@ -254,18 +255,25 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
         this._sevenDayRow.update(sd?.utilization ?? null, sd?.resets_at);
         this._sonnetRow.update(sn?.utilization ?? null, sn?.resets_at);
 
-        // Panel label: all three values
-        const fhPct = fh ? Math.round(fh.utilization) : '?';
-        const sdPct = sd ? Math.round(sd.utilization) : '?';
-        const snPct = sn ? Math.round(sn.utilization) : '?';
-        this._panelLabel.text = `${fhPct}% · ${sdPct}% · ${snPct}%`;
+        // Panel label: only visible metrics
+        const segments = [];
+        const visiblePcts = [];
+        if (this._settings.get_boolean('show-session')) {
+            segments.push(`${fh ? Math.round(fh.utilization) : '?'}%`);
+            if (fh) visiblePcts.push(fh.utilization);
+        }
+        if (this._settings.get_boolean('show-weekly')) {
+            segments.push(`${sd ? Math.round(sd.utilization) : '?'}%`);
+            if (sd) visiblePcts.push(sd.utilization);
+        }
+        if (this._settings.get_boolean('show-sonnet')) {
+            segments.push(`${sn ? Math.round(sn.utilization) : '?'}%`);
+            if (sn) visiblePcts.push(sn.utilization);
+        }
+        this._panelLabel.text = segments.length > 0 ? segments.join(' · ') : '—';
 
-        // Colour the panel text when any bucket is high
-        const maxPct = Math.max(
-            fh?.utilization ?? 0,
-            sd?.utilization ?? 0,
-            sn?.utilization ?? 0
-        );
+        // Colour the panel text when any visible bucket is high
+        const maxPct = visiblePcts.length > 0 ? Math.max(...visiblePcts) : 0;
         const warn = this._settings.get_int('warn-threshold');
         const crit = this._settings.get_int('crit-threshold');
         if (maxPct >= crit)

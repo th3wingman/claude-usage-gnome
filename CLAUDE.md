@@ -47,6 +47,9 @@ All settings are configurable via GSettings (`org.gnome.shell.extensions.claude-
 | `color-ok` | `s` | `#73c48f` | Bar color below warn threshold |
 | `color-warn` | `s` | `#f5a623` | Bar + panel color at warn threshold |
 | `color-crit` | `s` | `#e74c3c` | Bar + panel color at crit threshold |
+| `show-session` | `b` | `true` | Show session (5h) usage in panel |
+| `show-weekly` | `b` | `true` | Show weekly (all models) usage in panel |
+| `show-sonnet` | `b` | `true` | Show weekly (Sonnet) usage in panel |
 
 Colors are applied via inline `style` attributes (not CSS classes) so user values take effect immediately.
 

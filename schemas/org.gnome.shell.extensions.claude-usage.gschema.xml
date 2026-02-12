@@ -40,5 +40,23 @@
       <summary>Critical color</summary>
       <description>Hex color for usage bars and panel text at the critical threshold.</description>
     </key>
+
+    <key name="show-session" type="b">
+      <default>true</default>
+      <summary>Show session (5h) in panel</summary>
+      <description>Whether to show the session (5-hour) usage metric in the panel label.</description>
+    </key>
+
+    <key name="show-weekly" type="b">
+      <default>true</default>
+      <summary>Show weekly (all models) in panel</summary>
+      <description>Whether to show the weekly (all models) usage metric in the panel label.</description>
+    </key>
+
+    <key name="show-sonnet" type="b">
+      <default>true</default>
+      <summary>Show weekly (Sonnet) in panel</summary>
+      <description>Whether to show the weekly (Sonnet) usage metric in the panel label.</description>
+    </key>
   </schema>
 </schemalist>

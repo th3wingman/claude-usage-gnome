@@ -32,6 +32,34 @@ export default class ClaudeUsagePreferences extends ExtensionPreferences {
             Gio.SettingsBindFlags.DEFAULT
         );
 
+        // ── Panel Display ───────────────────────────────────────────────
+        const displayGroup = new Adw.PreferencesGroup({
+            title: 'Panel Display',
+            description: 'Choose which metrics appear in the panel label',
+        });
+        page.add(displayGroup);
+
+        const showSessionRow = new Adw.SwitchRow({
+            title: 'Session (5h)',
+            subtitle: 'Show session usage in panel',
+        });
+        settings.bind('show-session', showSessionRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        displayGroup.add(showSessionRow);
+
+        const showWeeklyRow = new Adw.SwitchRow({
+            title: 'Weekly (all models)',
+            subtitle: 'Show weekly usage in panel',
+        });
+        settings.bind('show-weekly', showWeeklyRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        displayGroup.add(showWeeklyRow);
+
+        const showSonnetRow = new Adw.SwitchRow({
+            title: 'Weekly (Sonnet)',
+            subtitle: 'Show Sonnet usage in panel',
+        });
+        settings.bind('show-sonnet', showSonnetRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        displayGroup.add(showSonnetRow);
+
         // ── Appearance ──────────────────────────────────────────────────
         const appearanceGroup = new Adw.PreferencesGroup({
             title: 'Appearance',
