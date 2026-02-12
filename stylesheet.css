@@ -1,13 +1,7 @@
 /* ── Panel ─────────────────────────────────────────────────────────────── */
-.claude-panel-icon {
-    icon-size: 16px;
-    margin-right: 4px;
-}
-
 .claude-panel-label {
-    font-size: 11px;
     font-weight: 600;
-    color: #ccc;
+    margin-left: 4px;
 }
 
 .claude-panel-warn {
@@ -21,37 +15,31 @@
 /* ── Menu header ──────────────────────────────────────────────────────── */
 .claude-header-label {
     font-weight: 700;
-    font-size: 13px;
-    color: #e8e8e8;
 }
 
 /* ── Usage rows ───────────────────────────────────────────────────────── */
 .claude-row-title {
-    font-size: 12px;
     font-weight: 600;
-    color: #ddd;
     margin-bottom: 4px;
 }
 
 .claude-row-value {
-    font-size: 12px;
     font-weight: 700;
-    color: #fff;
     margin-bottom: 4px;
 }
 
 .claude-bar-track {
-    height: 6px;
-    border-radius: 3px;
+    height: 8px;
+    border-radius: 4px;
     background-color: rgba(255, 255, 255, 0.12);
     margin-top: 2px;
-    margin-bottom: 4px;
-    min-width: 200px;
+    margin-bottom: 6px;
+    min-width: 220px;
 }
 
 .claude-bar-fill {
-    height: 6px;
-    border-radius: 3px;
+    height: 8px;
+    border-radius: 4px;
     min-width: 0px;
 }
 
@@ -68,14 +56,14 @@
 }
 
 .claude-row-reset {
-    font-size: 10px;
     color: #999;
-    margin-bottom: 6px;
+    font-size: 90%;
+    margin-bottom: 8px;
 }
 
-/* ── Status line ──────────────────────────────────────────────────────── */
+/* ── Status ───────────────────────────────────────────────────────────── */
 .claude-status-label {
-    font-size: 10px;
     font-style: italic;
     color: #888;
+    font-size: 90%;
 }

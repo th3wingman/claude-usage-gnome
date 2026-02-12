@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# install.sh — Install or uninstall the Claude Code Usage GNOME extension
 set -euo pipefail
 
 UUID="claude-usage@claude-code"
@@ -9,10 +8,11 @@ SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
 case "${1:-install}" in
     install)
         echo "Installing ${UUID} …"
-        mkdir -p "${EXT_DIR}"
+        mkdir -p "${EXT_DIR}/icons"
         cp "${SRC_DIR}/metadata.json"  "${EXT_DIR}/"
         cp "${SRC_DIR}/extension.js"   "${EXT_DIR}/"
         cp "${SRC_DIR}/stylesheet.css" "${EXT_DIR}/"
+        cp "${SRC_DIR}/icons/claude-symbolic.svg" "${EXT_DIR}/icons/"
         echo "Installed to ${EXT_DIR}"
         echo ""
         echo "Next steps:"
@@ -21,8 +21,6 @@ case "${1:-install}" in
         echo "       Wayland: log out and back in"
         echo "  2. Enable the extension:"
         echo "       gnome-extensions enable ${UUID}"
-        echo ""
-        echo "  Or use Extension Manager / GNOME Extensions app to enable it."
         ;;
     uninstall|remove)
         echo "Removing ${UUID} …"

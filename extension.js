@@ -10,20 +10,19 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-const REFRESH_SECONDS = 300; // 5 minutes
+const REFRESH_SECONDS = 300;
 const API_URL = 'https://api.anthropic.com/api/oauth/usage';
 
-// ── Custom menu item: label on left, value on right, bar underneath ─────────
+// ── Usage row: title + percentage on top, bar in middle, reset time below ───
 const UsageRow = GObject.registerClass(
 class UsageRow extends PopupMenu.PopupBaseMenuItem {
     _init(title, params) {
         super._init({reactive: false, can_focus: false, ...params});
 
-        // Vertical box for the whole row
         this._box = new St.BoxLayout({vertical: true, x_expand: true});
         this.add_child(this._box);
 
-        // Top line: title … value
+        // Title … value
         const topLine = new St.BoxLayout({x_expand: true});
         this._box.add_child(topLine);
 
@@ -33,8 +32,6 @@ class UsageRow extends PopupMenu.PopupBaseMenuItem {
             y_align: Clutter.ActorAlign.CENTER,
         });
         topLine.add_child(this._title);
-
-        // Spacer
         topLine.add_child(new St.Widget({x_expand: true}));
 
         this._value = new St.Label({
@@ -44,22 +41,19 @@ class UsageRow extends PopupMenu.PopupBaseMenuItem {
         });
         topLine.add_child(this._value);
 
-        // Bar track
+        // Bar
         this._barTrack = new St.Widget({
             style_class: 'claude-bar-track',
             x_expand: true,
-            y_expand: false,
         });
         this._box.add_child(this._barTrack);
 
-        // Bar fill (child of track)
         this._barFill = new St.Widget({
             style_class: 'claude-bar-fill',
-            y_expand: true,
         });
         this._barTrack.add_child(this._barFill);
 
-        // Reset time label
+        // Reset time
         this._resetLabel = new St.Label({
             text: '',
             style_class: 'claude-row-reset',
@@ -78,7 +72,7 @@ class UsageRow extends PopupMenu.PopupBaseMenuItem {
         const p = Math.round(pct);
         this._value.text = `${p}%`;
 
-        // Color the bar based on usage
+        // Bar color
         this._barFill.remove_style_class_name('claude-bar-ok');
         this._barFill.remove_style_class_name('claude-bar-warn');
         this._barFill.remove_style_class_name('claude-bar-crit');
@@ -89,19 +83,18 @@ class UsageRow extends PopupMenu.PopupBaseMenuItem {
         else
             this._barFill.add_style_class_name('claude-bar-ok');
 
-        // Set bar width as percentage of track
-        // We do this after the track is allocated, or just set a rough pixel width
-        const trackWidth = this._barTrack.width || 200;
+        // Bar width as % of track
+        const trackWidth = this._barTrack.width || 220;
         this._barFill.width = Math.max(0, (p / 100) * trackWidth);
 
-        // Format reset time
+        // Reset time
         if (resetsAt) {
             try {
                 const dt = GLib.DateTime.new_from_iso8601(resetsAt, null);
                 if (dt) {
                     const local = dt.to_local();
                     const now = GLib.DateTime.new_now_local();
-                    const diff = local.difference(now) / 1000000; // microseconds → seconds
+                    const diff = local.difference(now) / 1000000;
                     const h = Math.floor(diff / 3600);
                     const m = Math.floor((diff % 3600) / 60);
                     const timeStr = local.format('%a %b %e, %l:%M %p');
@@ -121,7 +114,7 @@ class UsageRow extends PopupMenu.PopupBaseMenuItem {
     }
 });
 
-// ── The indicator itself ────────────────────────────────────────────────────
+// ── Panel indicator ─────────────────────────────────────────────────────────
 const ClaudeUsageIndicator = GObject.registerClass(
 class ClaudeUsageIndicator extends PanelMenu.Button {
     _init(extensionPath) {
@@ -131,14 +124,18 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
         this._session = new Soup.Session();
         this._timeoutId = null;
 
-        // ── Panel button content: icon + compact label ──────────────────
-        const panelBox = new St.BoxLayout({style_class: 'panel-status-indicators-box'});
+        // ── Panel button: Claude icon + "5h% · 7d% · S%" ───────────────
+        const panelBox = new St.BoxLayout({
+            style_class: 'panel-status-indicators-box',
+        });
         this.add_child(panelBox);
 
-        // Small icon (using a generic symbolic icon; swap if you prefer)
+        // Claude icon from bundled SVG
+        const iconPath = GLib.build_filenamev([extensionPath, 'icons', 'claude-symbolic.svg']);
+        const gicon = Gio.icon_new_for_string(iconPath);
         this._icon = new St.Icon({
-            icon_name: 'dialog-information-symbolic',
-            style_class: 'system-status-icon claude-panel-icon',
+            gicon,
+            style_class: 'system-status-icon',
         });
         panelBox.add_child(this._icon);
 
@@ -149,19 +146,16 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
         });
         panelBox.add_child(this._panelLabel);
 
-        // ── Dropdown menu ───────────────────────────────────────────────
-        // Header
+        // ── Dropdown ────────────────────────────────────────────────────
         const header = new PopupMenu.PopupMenuItem('Claude Code Usage', {
             reactive: false,
             can_focus: false,
-            style_class: 'claude-menu-header',
         });
         header.label.add_style_class_name('claude-header-label');
         this.menu.addMenuItem(header);
 
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-        // Usage rows
         this._fiveHourRow = new UsageRow('Session  (5 h)');
         this.menu.addMenuItem(this._fiveHourRow);
 
@@ -173,29 +167,27 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
 
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-        // Status line
-        this._statusItem = new PopupMenu.PopupMenuItem('', {reactive: false, can_focus: false});
+        this._statusItem = new PopupMenu.PopupMenuItem('', {
+            reactive: false,
+            can_focus: false,
+        });
         this._statusItem.label.add_style_class_name('claude-status-label');
         this.menu.addMenuItem(this._statusItem);
 
-        // Refresh button
         const refreshItem = new PopupMenu.PopupMenuItem('↻  Refresh now');
         refreshItem.connect('activate', () => this._refresh());
         this.menu.addMenuItem(refreshItem);
 
-        // First fetch
         this._refresh();
         this._startTimer();
     }
 
-    // ── Token retrieval ────────────────────────────────────────────────
     _getToken() {
         const credPath = GLib.build_filenamev([
             GLib.get_home_dir(), '.claude', '.credentials.json',
         ]);
         const file = Gio.File.new_for_path(credPath);
-        if (!file.query_exists(null))
-            return null;
+        if (!file.query_exists(null)) return null;
 
         const [ok, contents] = file.load_contents(null);
         if (!ok) return null;
@@ -204,7 +196,6 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
             const creds = JSON.parse(new TextDecoder().decode(contents));
             if (creds?.claudeAiOauth?.accessToken)
                 return creds.claudeAiOauth.accessToken;
-            // Fallback: iterate values
             for (const val of Object.values(creds)) {
                 if (val?.accessToken) return val.accessToken;
             }
@@ -212,7 +203,6 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
         return null;
     }
 
-    // ── HTTP fetch ─────────────────────────────────────────────────────
     _refresh() {
         const token = this._getToken();
         if (!token) {
@@ -244,7 +234,6 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
         );
     }
 
-    // ── UI update ──────────────────────────────────────────────────────
     _updateUI(data) {
         const fh = data.five_hour;
         const sd = data.seven_day;
@@ -254,15 +243,20 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
         this._sevenDayRow.update(sd?.utilization ?? null, sd?.resets_at);
         this._sonnetRow.update(sn?.utilization ?? null, sn?.resets_at);
 
-        // Panel label: compact summary
+        // Panel label: all three values
         const fhPct = fh ? Math.round(fh.utilization) : '?';
         const sdPct = sd ? Math.round(sd.utilization) : '?';
-        this._panelLabel.text = `${fhPct}% · ${sdPct}%`;
+        const snPct = sn ? Math.round(sn.utilization) : '?';
+        this._panelLabel.text = `${fhPct}% · ${sdPct}% · ${snPct}%`;
 
-        // Color the panel label if usage is high
+        // Colour the panel text when any bucket is high
         this._panelLabel.remove_style_class_name('claude-panel-warn');
         this._panelLabel.remove_style_class_name('claude-panel-crit');
-        const maxPct = Math.max(fh?.utilization ?? 0, sd?.utilization ?? 0);
+        const maxPct = Math.max(
+            fh?.utilization ?? 0,
+            sd?.utilization ?? 0,
+            sn?.utilization ?? 0
+        );
         if (maxPct >= 80)
             this._panelLabel.add_style_class_name('claude-panel-crit');
         else if (maxPct >= 50)
@@ -277,7 +271,6 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
         this._statusItem.label.text = `Error: ${msg}`;
     }
 
-    // ── Timer ──────────────────────────────────────────────────────────
     _startTimer() {
         this._timeoutId = GLib.timeout_add_seconds(
             GLib.PRIORITY_DEFAULT,
@@ -303,7 +296,7 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
     }
 });
 
-// ── Extension entry point ───────────────────────────────────────────────────
+// ── Entry point ─────────────────────────────────────────────────────────────
 export default class ClaudeUsageExtension extends Extension {
     enable() {
         this._indicator = new ClaudeUsageIndicator(this.path);
