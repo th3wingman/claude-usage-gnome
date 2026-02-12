@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="claude-usage">
+  <schema id="org.gnome.shell.extensions.claude-usage"
+          path="/org/gnome/shell/extensions/claude-usage/">
+    <key name="refresh-interval" type="i">
+      <default>300</default>
+      <range min="30" max="3600"/>
+      <summary>Refresh interval in seconds</summary>
+      <description>How often to poll the Claude API for usage data (30–3600 seconds).</description>
+    </key>
+  </schema>
+</schemalist>

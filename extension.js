@@ -10,7 +10,6 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-const REFRESH_SECONDS = 300;
 const API_URL = 'https://api.anthropic.com/api/oauth/usage';
 
 // ── Usage row: title + percentage on top, bar in middle, reset time below ───
@@ -117,12 +116,16 @@ class UsageRow extends PopupMenu.PopupBaseMenuItem {
 // ── Panel indicator ─────────────────────────────────────────────────────────
 const ClaudeUsageIndicator = GObject.registerClass(
 class ClaudeUsageIndicator extends PanelMenu.Button {
-    _init(extensionPath) {
+    _init(extensionPath, settings) {
         super._init(0.0, 'Claude Code Usage', false);
 
         this._extensionPath = extensionPath;
+        this._settings = settings;
         this._session = new Soup.Session();
         this._timeoutId = null;
+        this._settingsChangedId = this._settings.connect(
+            'changed::refresh-interval', () => this._restartTimer()
+        );
 
         // ── Panel button: Claude icon + "5h% · 7d% · S%" ───────────────
         const panelBox = new St.BoxLayout({
@@ -272,14 +275,20 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
     }
 
     _startTimer() {
+        const interval = this._settings.get_int('refresh-interval');
         this._timeoutId = GLib.timeout_add_seconds(
             GLib.PRIORITY_DEFAULT,
-            REFRESH_SECONDS,
+            interval,
             () => {
                 this._refresh();
                 return GLib.SOURCE_CONTINUE;
             }
         );
+    }
+
+    _restartTimer() {
+        this._stopTimer();
+        this._startTimer();
     }
 
     _stopTimer() {
@@ -291,6 +300,11 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
 
     destroy() {
         this._stopTimer();
+        if (this._settingsChangedId) {
+            this._settings.disconnect(this._settingsChangedId);
+            this._settingsChangedId = null;
+        }
+        this._settings = null;
         this._session = null;
         super.destroy();
     }
@@ -299,7 +313,7 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
 // ── Entry point ─────────────────────────────────────────────────────────────
 export default class ClaudeUsageExtension extends Extension {
     enable() {
-        this._indicator = new ClaudeUsageIndicator(this.path);
+        this._indicator = new ClaudeUsageIndicator(this.path, this.getSettings());
         Main.panel.addToStatusArea(this.uuid, this._indicator);
     }
 

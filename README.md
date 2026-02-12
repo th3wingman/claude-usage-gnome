@@ -44,8 +44,15 @@ gnome-extensions enable claude-usage@th3wingman
 
 ## Configuration
 
-Edit `REFRESH_SECONDS` in `extension.js` to change the polling interval
-(default: 300 seconds / 5 minutes).
+Open the preferences dialog to change the polling interval (default 300 s):
+
+```bash
+gnome-extensions prefs claude-usage@th3wingman
+```
+
+Or click the gear icon in Extension Manager.
+
+The interval can be set between 30 and 3600 seconds. Changes take effect immediately.
 
 ## Icon
 
@@ -56,6 +63,14 @@ Uses the Claude icon from [Bootstrap Icons](https://icons.getbootstrap.com/icons
 Reads your OAuth token from `~/.claude/.credentials.json` and calls the same
 internal API endpoint (`/api/oauth/usage`) that Claude Code's `/usage` command
 uses. This is an undocumented endpoint and may change in future versions.
+
+## Notes
+
+**"See Details" in Extension Manager** shows an error — this is expected.
+Extension Manager fetches details from extensions.gnome.org by UUID; since the
+extension isn't published there, the lookup fails. This doesn't affect
+functionality. See the [GitHub repo](https://github.com/th3wingman/claude-usage-gnome)
+for details instead.
 
 ## License
 

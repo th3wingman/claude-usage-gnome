@@ -29,11 +29,18 @@ Data flow: read OAuth token → GET `https://api.anthropic.com/api/oauth/usage` 
 
 **stylesheet.css** — progress bar and panel label styling. Color thresholds match the JS logic.
 
-**install.sh** — bash script (`set -euo pipefail`) that copies extension files to the GNOME extensions directory.
+**prefs.js** — preferences window using libadwaita (`Adw.SpinRow`), bound to GSettings.
+
+**schemas/org.gnome.shell.extensions.claude-usage.gschema.xml** — GSettings schema with `refresh-interval` key.
+
+**install.sh** — bash script (`set -euo pipefail`) that copies extension files to the GNOME extensions directory and compiles the GSettings schema.
+
+## Settings
+
+Refresh interval is configurable via GSettings (`org.gnome.shell.extensions.claude-usage`). Schema XML lives in `schemas/`, compiled at install time. `prefs.js` provides the preferences UI (Adw.SpinRow, 30–3600s). The extension connects to `changed::refresh-interval` to restart its timer live.
 
 ## Key Constants (extension.js)
 
-- `REFRESH_SECONDS` (300) — polling interval
 - `API_URL` — usage endpoint
 - User-Agent and beta header are hardcoded
 

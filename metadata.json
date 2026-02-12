@@ -3,6 +3,7 @@
   "description": "Monitor Claude Code token usage limits from the top bar",
   "uuid": "claude-usage@th3wingman",
   "shell-version": ["46"],
-  "version": 2,
-  "url": "https://github.com/th3wingman/claude-usage-gnome"
+  "version": 3,
+  "url": "https://github.com/th3wingman/claude-usage-gnome",
+  "settings-schema": "org.gnome.shell.extensions.claude-usage"
 }
