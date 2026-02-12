@@ -6,7 +6,7 @@ Claude Code token usage without opening the CLI.
 ## What it shows
 
 **Top bar:** Claude icon + `7% · 4% · 0%` — session, weekly, and Sonnet usage.
-Text turns yellow at 50% and red at 80%.
+Text turns yellow at 50% and red at 80% (configurable).
 
 **Dropdown menu:**
 - Session (5 h) — current rolling window usage + reset countdown
@@ -44,7 +44,7 @@ gnome-extensions enable claude-usage@th3wingman
 
 ## Configuration
 
-Open the preferences dialog to change the polling interval (default 300 s):
+Open the preferences dialog:
 
 ```bash
 gnome-extensions prefs claude-usage@th3wingman
@@ -52,7 +52,17 @@ gnome-extensions prefs claude-usage@th3wingman
 
 Or click the gear icon in Extension Manager.
 
-The interval can be set between 30 and 3600 seconds. Changes take effect immediately.
+All settings take effect immediately:
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| Refresh interval | 300 s | How often to poll the API (30–3600 s) |
+| Show Session (5h) | on | Show session usage in panel label |
+| Show Weekly (all models) | on | Show weekly usage in panel label |
+| Show Weekly (Sonnet) | on | Show Sonnet usage in panel label |
+| Warning threshold | 50% | Bars/panel turn warning color |
+| Critical threshold | 80% | Bars/panel turn critical color |
+| OK / Warning / Critical colors | green / yellow / red | Hex colors for bars and panel text |
 
 ## Icon
 
