@@ -58,5 +58,11 @@
       <summary>Show weekly (Sonnet) in panel</summary>
       <description>Whether to show the weekly (Sonnet) usage metric in the panel label.</description>
     </key>
+
+    <key name="show-opus" type="b">
+      <default>true</default>
+      <summary>Show weekly (Opus) in panel</summary>
+      <description>Whether to show the weekly (Opus) usage metric in the panel label (only when data is available).</description>
+    </key>
   </schema>
 </schemalist>

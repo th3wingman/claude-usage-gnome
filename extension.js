@@ -12,17 +12,18 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 const API_URL = 'https://api.anthropic.com/api/oauth/usage';
 
-// ── Usage row: title + percentage on top, bar in middle, reset time below ───
+// ── Usage row: title + percentage on top, bar below, optional reset ────
 const UsageRow = GObject.registerClass(
 class UsageRow extends PopupMenu.PopupBaseMenuItem {
     _init(title, settings, params) {
         super._init({reactive: false, can_focus: false, ...params});
+        this.add_style_class_name('claude-usage-row');
 
         this._settings = settings;
         this._box = new St.BoxLayout({vertical: true, x_expand: true});
         this.add_child(this._box);
 
-        // Title … value
+        // Title … value … reset
         const topLine = new St.BoxLayout({x_expand: true});
         this._box.add_child(topLine);
 
@@ -33,6 +34,13 @@ class UsageRow extends PopupMenu.PopupBaseMenuItem {
         });
         topLine.add_child(this._title);
         topLine.add_child(new St.Widget({x_expand: true}));
+
+        this._resetLabel = new St.Label({
+            text: '',
+            style_class: 'claude-row-reset',
+            y_align: Clutter.ActorAlign.CENTER,
+        });
+        topLine.add_child(this._resetLabel);
 
         this._value = new St.Label({
             text: '—',
@@ -52,13 +60,6 @@ class UsageRow extends PopupMenu.PopupBaseMenuItem {
             style_class: 'claude-bar-fill',
         });
         this._barTrack.add_child(this._barFill);
-
-        // Reset time
-        this._resetLabel = new St.Label({
-            text: '',
-            style_class: 'claude-row-reset',
-        });
-        this._box.add_child(this._resetLabel);
     }
 
     update(pct, resetsAt) {
@@ -88,21 +89,25 @@ class UsageRow extends PopupMenu.PopupBaseMenuItem {
         const trackWidth = this._barTrack.width || 220;
         this._barFill.width = Math.max(0, (p / 100) * trackWidth);
 
-        // Reset time
+        // Reset countdown
         if (resetsAt) {
             try {
                 const dt = GLib.DateTime.new_from_iso8601(resetsAt, null);
                 if (dt) {
-                    const local = dt.to_local();
                     const now = GLib.DateTime.new_now_local();
-                    const diff = local.difference(now) / 1000000;
-                    const h = Math.floor(diff / 3600);
-                    const m = Math.floor((diff % 3600) / 60);
-                    const timeStr = local.format('%a %b %e, %l:%M %p');
-                    if (diff > 0)
-                        this._resetLabel.text = `Resets ${timeStr}  (${h}h ${m}m)`;
-                    else
-                        this._resetLabel.text = `Reset time passed`;
+                    const diff = dt.to_local().difference(now) / 1000000;
+                    if (diff > 0) {
+                        const h = Math.floor(diff / 3600);
+                        const m = Math.floor((diff % 3600) / 60);
+                        if (h >= 24) {
+                            const d = Math.floor(h / 24);
+                            this._resetLabel.text = `↻ ${d}d ${h % 24}h`;
+                        } else {
+                            this._resetLabel.text = `↻ ${h}h ${m}m`;
+                        }
+                    } else {
+                        this._resetLabel.text = '↻ resetting…';
+                    }
                 } else {
                     this._resetLabel.text = '';
                 }
@@ -130,19 +135,18 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
             'changed::refresh-interval', () => this._restartTimer()
         ));
         for (const key of ['warn-threshold', 'crit-threshold', 'color-ok', 'color-warn', 'color-crit',
-                            'show-session', 'show-weekly', 'show-sonnet']) {
+                            'show-session', 'show-weekly', 'show-sonnet', 'show-opus']) {
             this._settingsChangedIds.push(this._settings.connect(
                 `changed::${key}`, () => this._refresh()
             ));
         }
 
-        // ── Panel button: Claude icon + "5h% · 7d% · S%" ───────────────
+        // ── Panel button ────────────────────────────────────────────────
         const panelBox = new St.BoxLayout({
             style_class: 'panel-status-indicators-box',
         });
         this.add_child(panelBox);
 
-        // Claude icon from bundled SVG
         const iconPath = GLib.build_filenamev([extensionPath, 'icons', 'claude-symbolic.svg']);
         const gicon = Gio.icon_new_for_string(iconPath);
         this._icon = new St.Icon({
@@ -165,30 +169,31 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
         });
         header.label.add_style_class_name('claude-header-label');
         this.menu.addMenuItem(header);
-
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-        this._fiveHourRow = new UsageRow('Session  (5 h)', this._settings);
+        this._fiveHourRow = new UsageRow('Session (5h)', this._settings);
         this.menu.addMenuItem(this._fiveHourRow);
 
-        this._sevenDayRow = new UsageRow('Weekly  (all models)', this._settings);
+        this._sevenDayRow = new UsageRow('Weekly (all)', this._settings);
         this.menu.addMenuItem(this._sevenDayRow);
 
-        this._sonnetRow = new UsageRow('Weekly  (Sonnet)', this._settings);
+        this._sonnetRow = new UsageRow('Weekly (Sonnet)', this._settings);
         this.menu.addMenuItem(this._sonnetRow);
+
+        this._opusRow = new UsageRow('Weekly (Opus)', this._settings);
+        this._opusRow.visible = false;
+        this.menu.addMenuItem(this._opusRow);
+
+        this._extraRow = new UsageRow('Extra Usage', this._settings);
+        this._extraRow.visible = false;
+        this.menu.addMenuItem(this._extraRow);
 
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-        this._statusItem = new PopupMenu.PopupMenuItem('', {
-            reactive: false,
-            can_focus: false,
-        });
-        this._statusItem.label.add_style_class_name('claude-status-label');
-        this.menu.addMenuItem(this._statusItem);
-
-        const refreshItem = new PopupMenu.PopupMenuItem('↻  Refresh now');
-        refreshItem.connect('activate', () => this._refresh());
-        this.menu.addMenuItem(refreshItem);
+        this._refreshItem = new PopupMenu.PopupMenuItem('↻  Refresh');
+        this._refreshItem.label.add_style_class_name('claude-refresh-label');
+        this._refreshItem.connect('activate', () => this._refresh());
+        this.menu.addMenuItem(this._refreshItem);
 
         this._refresh();
         this._startTimer();
@@ -199,32 +204,37 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
             GLib.get_home_dir(), '.claude', '.credentials.json',
         ]);
         const file = Gio.File.new_for_path(credPath);
-        if (!file.query_exists(null)) return null;
+        if (!file.query_exists(null))
+            return {error: 'No credentials found'};
 
         const [ok, contents] = file.load_contents(null);
-        if (!ok) return null;
+        if (!ok) return {error: 'Cannot read credentials'};
 
         try {
             const creds = JSON.parse(new TextDecoder().decode(contents));
-            if (creds?.claudeAiOauth?.accessToken)
-                return creds.claudeAiOauth.accessToken;
+            const oauth = creds?.claudeAiOauth;
+            if (oauth?.accessToken) {
+                if (oauth.expiresAt && Date.now() >= oauth.expiresAt)
+                    return {error: 'Token expired \u2014 run Claude Code to refresh'};
+                return {token: oauth.accessToken};
+            }
             for (const val of Object.values(creds)) {
-                if (val?.accessToken) return val.accessToken;
+                if (val?.accessToken) return {token: val.accessToken};
             }
         } catch (_e) { /* ignore */ }
-        return null;
+        return {error: 'No credentials found'};
     }
 
     _refresh() {
-        const token = this._getToken();
-        if (!token) {
-            this._setError('No credentials found');
+        const cred = this._getToken();
+        if (cred.error) {
+            this._setError(cred.error);
             return;
         }
 
         const msg = Soup.Message.new('GET', API_URL);
-        msg.request_headers.append('Authorization', `Bearer ${token}`);
-        msg.request_headers.append('User-Agent', 'claude-code/2.1.39');
+        msg.request_headers.append('Authorization', `Bearer ${cred.token}`);
+        msg.request_headers.append('User-Agent', 'claude-code/2.1.90');
         msg.request_headers.append('anthropic-beta', 'oauth-2025-04-20');
 
         this._session.send_and_read_async(
@@ -232,8 +242,21 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
             (session, result) => {
                 try {
                     const bytes = session.send_and_read_finish(result);
-                    if (msg.get_status() !== Soup.Status.OK) {
-                        this._setError(`API ${msg.get_status()}`);
+                    const status = msg.get_status();
+                    if (status !== Soup.Status.OK) {
+                        switch (status) {
+                        case 401:
+                            this._setError('Auth failed \u2014 token may be expired');
+                            break;
+                        case 403:
+                            this._setError('Access denied');
+                            break;
+                        case 429:
+                            this._setError('Rate limited \u2014 retry later');
+                            break;
+                        default:
+                            this._setError(`API error ${status}`);
+                        }
                         return;
                     }
                     const text = new TextDecoder().decode(bytes.get_data());
@@ -250,10 +273,25 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
         const fh = data.five_hour;
         const sd = data.seven_day;
         const sn = data.seven_day_sonnet;
+        const op = data.seven_day_opus;
+        const eu = data.extra_usage;
 
         this._fiveHourRow.update(fh?.utilization ?? null, fh?.resets_at);
         this._sevenDayRow.update(sd?.utilization ?? null, sd?.resets_at);
         this._sonnetRow.update(sn?.utilization ?? null, sn?.resets_at);
+
+        // Opus — only show row when API returns data
+        this._opusRow.visible = !!op;
+        if (op) this._opusRow.update(op.utilization ?? null, op.resets_at);
+
+        // Extra usage — only show when enabled
+        const showExtra = eu?.is_enabled && eu?.utilization != null;
+        this._extraRow.visible = !!showExtra;
+        if (showExtra) {
+            this._extraRow.update(eu.utilization, null);
+            if (eu.used_credits != null && eu.monthly_limit != null)
+                this._extraRow._resetLabel.text = `$${Number(eu.used_credits).toFixed(2)} / $${Number(eu.monthly_limit).toFixed(2)}`;
+        }
 
         // Panel label: only visible metrics
         const segments = [];
@@ -270,6 +308,10 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
             segments.push(`${sn ? Math.round(sn.utilization) : '?'}%`);
             if (sn) visiblePcts.push(sn.utilization);
         }
+        if (this._settings.get_boolean('show-opus') && op) {
+            segments.push(`${Math.round(op.utilization)}%`);
+            visiblePcts.push(op.utilization);
+        }
         this._panelLabel.text = segments.length > 0 ? segments.join(' · ') : '—';
 
         // Colour the panel text when any visible bucket is high
@@ -284,12 +326,12 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
             this._panelLabel.set_style('');
 
         const now = GLib.DateTime.new_now_local();
-        this._statusItem.label.text = `Updated ${now.format('%l:%M %p')}`;
+        this._refreshItem.label.text = `↻  Refresh  ·  ${now.format('%l:%M %p').trim()}`;
     }
 
     _setError(msg) {
         this._panelLabel.text = '⚠';
-        this._statusItem.label.text = `Error: ${msg}`;
+        this._refreshItem.label.text = `↻  Refresh  ·  ${msg}`;
     }
 
     _startTimer() {

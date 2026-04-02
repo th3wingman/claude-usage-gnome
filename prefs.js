@@ -60,6 +60,13 @@ export default class ClaudeUsagePreferences extends ExtensionPreferences {
         settings.bind('show-sonnet', showSonnetRow, 'active', Gio.SettingsBindFlags.DEFAULT);
         displayGroup.add(showSonnetRow);
 
+        const showOpusRow = new Adw.SwitchRow({
+            title: 'Weekly (Opus)',
+            subtitle: 'Show Opus usage in panel (when available)',
+        });
+        settings.bind('show-opus', showOpusRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        displayGroup.add(showOpusRow);
+
         // ── Appearance ──────────────────────────────────────────────────
         const appearanceGroup = new Adw.PreferencesGroup({
             title: 'Appearance',
