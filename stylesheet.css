@@ -9,41 +9,46 @@
     font-weight: 700;
 }
 
-/* ── Usage rows ───────────────────────────────────────────────────────── */
+/* ── Usage rows (compact) ────────────────────────────────────────────── */
+.claude-usage-row {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
 .claude-row-title {
     font-weight: 600;
-    margin-bottom: 4px;
 }
 
 .claude-row-value {
     font-weight: 700;
-    margin-bottom: 4px;
-}
-
-.claude-bar-track {
-    height: 8px;
-    border-radius: 4px;
-    background-color: rgba(255, 255, 255, 0.12);
-    margin-top: 2px;
-    margin-bottom: 6px;
-    min-width: 220px;
-}
-
-.claude-bar-fill {
-    height: 8px;
-    border-radius: 4px;
-    min-width: 0px;
+    min-width: 36px;
+    text-align: right;
 }
 
 .claude-row-reset {
     color: #999;
     font-size: 90%;
-    margin-bottom: 8px;
+    margin-right: 8px;
 }
 
-/* ── Status ───────────────────────────────────────────────────────────── */
-.claude-status-label {
+.claude-bar-track {
+    height: 6px;
+    border-radius: 3px;
+    background-color: rgba(255, 255, 255, 0.12);
+    margin-top: 2px;
+    margin-bottom: 2px;
+    min-width: 220px;
+}
+
+.claude-bar-fill {
+    height: 6px;
+    border-radius: 3px;
+    min-width: 0px;
+}
+
+/* ── Refresh / status ────────────────────────────────────────────────── */
+.claude-refresh-label {
     font-style: italic;
-    color: #888;
+    color: #999;
     font-size: 90%;
 }
