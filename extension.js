@@ -242,8 +242,8 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
             (session, result) => {
                 try {
                     const bytes = session.send_and_read_finish(result);
-                    const status = msg.get_status();
-                    if (status !== Soup.Status.OK) {
+                    const status = msg.status_code;
+                    if (status !== 200) {
                         switch (status) {
                         case 401:
                             this._setError('Auth failed \u2014 token may be expired');
