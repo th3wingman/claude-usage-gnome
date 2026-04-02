@@ -252,7 +252,7 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
                             this._setError('Access denied');
                             break;
                         case 429:
-                            this._setError('Rate limited \u2014 retry later');
+                            this._setError('Rate limited \u2014 retry later', true);
                             break;
                         default:
                             this._setError(`API error ${status}`);
@@ -329,8 +329,9 @@ class ClaudeUsageIndicator extends PanelMenu.Button {
         this._refreshItem.label.text = `↻  Refresh  ·  ${now.format('%l:%M %p').trim()}`;
     }
 
-    _setError(msg) {
-        this._panelLabel.text = '⚠';
+    _setError(msg, soft = false) {
+        if (!soft)
+            this._panelLabel.text = '⚠';
         this._refreshItem.label.text = `↻  Refresh  ·  ${msg}`;
     }
 
